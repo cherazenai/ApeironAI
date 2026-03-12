@@ -49,8 +49,8 @@ const Demo = () => {
           {/* Header bar */}
           <div className="flex items-center gap-2 px-5 py-3 border-b border-border/50">
             <div className="w-3 h-3 rounded-full bg-destructive/70" />
-            <div className="w-3 h-3 rounded-full bg-yellow-500/70" />
-            <div className="w-3 h-3 rounded-full bg-green-500/70" />
+            <div className="w-3 h-3 rounded-full bg-accent/40" />
+            <div className="w-3 h-3 rounded-full bg-primary/40" />
             <span className="ml-3 text-xs text-muted-foreground font-body">
               ApeironAI Research Copilot
             </span>
