@@ -9,6 +9,7 @@ import {
   SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem,
   SidebarFooter, useSidebar,
 } from "@/components/ui/sidebar";
+import { useAuth } from "@/hooks/useAuth";
 import logoIcon from "@/assets/logo-icon.png";
 
 const mainItems = [
@@ -31,16 +32,28 @@ export function AppSidebar() {
   const collapsed = state === "collapsed";
   const location = useLocation();
   const navigate = useNavigate();
+  const { user, signOut } = useAuth();
   const isActive = (path: string) => location.pathname === path;
+
+  const handleLogout = async () => {
+    await signOut();
+    navigate("/");
+  };
 
   return (
     <Sidebar collapsible="icon" className="border-r border-sidebar-border">
       <SidebarContent className="bg-sidebar">
-        {/* Logo */}
         <div className="p-4 flex items-center gap-3 cursor-pointer" onClick={() => navigate("/")}>
           <img src={logoIcon} alt="ApeironAI" className="w-8 h-8" />
           {!collapsed && <span className="font-heading text-lg text-foreground">ApeironAI</span>}
         </div>
+
+        {/* User info */}
+        {!collapsed && user && (
+          <div className="px-4 pb-3">
+            <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+          </div>
+        )}
 
         <SidebarGroup>
           <SidebarGroupLabel className="text-muted-foreground text-xs uppercase tracking-wider">
@@ -86,9 +99,9 @@ export function AppSidebar() {
       <SidebarFooter className="bg-sidebar border-t border-sidebar-border p-3">
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton onClick={() => navigate("/")} className="text-muted-foreground hover:text-destructive">
+            <SidebarMenuButton onClick={handleLogout} className="text-muted-foreground hover:text-destructive">
               <LogOut className="h-4 w-4" />
-              {!collapsed && <span>Back to Home</span>}
+              {!collapsed && <span>Logout</span>}
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

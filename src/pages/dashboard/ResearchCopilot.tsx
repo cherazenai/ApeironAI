@@ -6,6 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import ReactMarkdown from "react-markdown";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
 
 type Message = { role: "user" | "assistant"; content: string };
 
@@ -16,11 +18,15 @@ const suggestions = [
   "Identify carbon capture materials with high absorption",
 ];
 
+const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`;
+
 const ResearchCopilot = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const { user } = useAuth();
+  const { toast } = useToast();
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
@@ -34,57 +40,71 @@ const ResearchCopilot = () => {
     setInput("");
     setIsLoading(true);
 
+    let assistantContent = "";
+
     try {
-      const response = await supabase.functions.invoke("chat", {
-        body: { messages: allMessages },
+      const resp = await fetch(CHAT_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        },
+        body: JSON.stringify({ messages: allMessages, stream: true }),
       });
 
-      if (response.error) throw response.error;
+      if (resp.status === 429) {
+        toast({ title: "Rate limited", description: "Too many requests. Please wait a moment.", variant: "destructive" });
+        setIsLoading(false);
+        return;
+      }
+      if (resp.status === 402) {
+        toast({ title: "Credits exhausted", description: "AI credits used up. Please try later.", variant: "destructive" });
+        setIsLoading(false);
+        return;
+      }
+      if (!resp.ok || !resp.body) throw new Error("Failed to start stream");
 
-      // Handle streaming SSE response
-      if (response.data instanceof ReadableStream) {
-        const reader = response.data.getReader();
-        const decoder = new TextDecoder();
-        let assistantContent = "";
-        let buffer = "";
+      const reader = resp.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
 
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          buffer += decoder.decode(value, { stream: true });
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
 
-          let newlineIndex: number;
-          while ((newlineIndex = buffer.indexOf("\n")) !== -1) {
-            let line = buffer.slice(0, newlineIndex);
-            buffer = buffer.slice(newlineIndex + 1);
-            if (line.endsWith("\r")) line = line.slice(0, -1);
-            if (!line.startsWith("data: ")) continue;
-            const jsonStr = line.slice(6).trim();
-            if (jsonStr === "[DONE]") break;
-            try {
-              const parsed = JSON.parse(jsonStr);
-              const content = parsed.choices?.[0]?.delta?.content;
-              if (content) {
-                assistantContent += content;
-                setMessages((prev) => {
-                  const last = prev[prev.length - 1];
-                  if (last?.role === "assistant") {
-                    return prev.map((m, i) => (i === prev.length - 1 ? { ...m, content: assistantContent } : m));
-                  }
-                  return [...prev, { role: "assistant", content: assistantContent }];
-                });
-              }
-            } catch {}
-          }
+        let newlineIndex: number;
+        while ((newlineIndex = buffer.indexOf("\n")) !== -1) {
+          let line = buffer.slice(0, newlineIndex);
+          buffer = buffer.slice(newlineIndex + 1);
+          if (line.endsWith("\r")) line = line.slice(0, -1);
+          if (!line.startsWith("data: ")) continue;
+          const jsonStr = line.slice(6).trim();
+          if (jsonStr === "[DONE]") break;
+          try {
+            const parsed = JSON.parse(jsonStr);
+            const content = parsed.choices?.[0]?.delta?.content;
+            if (content) {
+              assistantContent += content;
+              setMessages((prev) => {
+                const last = prev[prev.length - 1];
+                if (last?.role === "assistant") {
+                  return prev.map((m, i) => (i === prev.length - 1 ? { ...m, content: assistantContent } : m));
+                }
+                return [...prev, { role: "assistant", content: assistantContent }];
+              });
+            }
+          } catch {}
         }
-      } else if (typeof response.data === "string") {
-        // Non-streaming text
-        setMessages((prev) => [...prev, { role: "assistant", content: response.data as string }]);
-      } else if (response.data?.choices) {
-        const content = response.data.choices[0]?.message?.content || "No response.";
-        setMessages((prev) => [...prev, { role: "assistant", content }]);
-      } else {
-        setMessages((prev) => [...prev, { role: "assistant", content: "I'm ready to help with your scientific research. Ask me anything about chemistry, biology, physics, or materials science." }]);
+      }
+
+      // Save to database
+      if (user && assistantContent) {
+        await supabase.from("research_queries" as any).insert({
+          user_id: user.id,
+          query: text.trim(),
+          response: assistantContent,
+        } as any);
       }
     } catch (err) {
       console.error("Chat error:", err);
@@ -115,11 +135,7 @@ const ResearchCopilot = () => {
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-w-lg w-full">
                 {suggestions.map((s) => (
-                  <button
-                    key={s}
-                    onClick={() => sendMessage(s)}
-                    className="text-left text-sm p-3 rounded-lg border border-border hover:border-primary/30 hover:bg-card-elevated transition-all text-muted-foreground hover:text-foreground"
-                  >
+                  <button key={s} onClick={() => sendMessage(s)} className="text-left text-sm p-3 rounded-lg border border-border hover:border-primary/30 hover:bg-card-elevated transition-all text-muted-foreground hover:text-foreground">
                     {s}
                   </button>
                 ))}
@@ -128,31 +144,16 @@ const ResearchCopilot = () => {
           )}
 
           {messages.map((msg, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className={`flex gap-3 ${msg.role === "user" ? "justify-end" : ""}`}
-            >
+            <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className={`flex gap-3 ${msg.role === "user" ? "justify-end" : ""}`}>
               {msg.role === "assistant" && (
                 <div className="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center shrink-0 mt-1">
                   <Bot className="h-4 w-4 text-primary" />
                 </div>
               )}
-              <div
-                className={`max-w-[80%] rounded-xl px-4 py-3 text-sm ${
-                  msg.role === "user"
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-card-elevated text-foreground"
-                }`}
-              >
+              <div className={`max-w-[80%] rounded-xl px-4 py-3 text-sm ${msg.role === "user" ? "bg-primary text-primary-foreground" : "bg-card-elevated text-foreground"}`}>
                 {msg.role === "assistant" ? (
-                  <div className="prose prose-invert prose-sm max-w-none">
-                    <ReactMarkdown>{msg.content}</ReactMarkdown>
-                  </div>
-                ) : (
-                  msg.content
-                )}
+                  <div className="prose prose-invert prose-sm max-w-none"><ReactMarkdown>{msg.content}</ReactMarkdown></div>
+                ) : msg.content}
               </div>
               {msg.role === "user" && (
                 <div className="w-7 h-7 rounded-full bg-muted flex items-center justify-center shrink-0 mt-1">
@@ -164,31 +165,16 @@ const ResearchCopilot = () => {
 
           {isLoading && messages[messages.length - 1]?.role === "user" && (
             <div className="flex gap-3">
-              <div className="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
-                <Bot className="h-4 w-4 text-primary" />
-              </div>
-              <div className="bg-card-elevated rounded-xl px-4 py-3">
-                <Loader2 className="h-4 w-4 animate-spin text-primary" />
-              </div>
+              <div className="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center shrink-0"><Bot className="h-4 w-4 text-primary" /></div>
+              <div className="bg-card-elevated rounded-xl px-4 py-3"><Loader2 className="h-4 w-4 animate-spin text-primary" /></div>
             </div>
           )}
         </div>
 
         <div className="p-4 border-t border-border">
-          <form
-            onSubmit={(e) => { e.preventDefault(); sendMessage(input); }}
-            className="flex gap-2"
-          >
-            <Input
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="Ask a scientific question..."
-              className="flex-1 bg-card-elevated border-border"
-              disabled={isLoading}
-            />
-            <Button type="submit" disabled={isLoading || !input.trim()} className="glow-button">
-              <Send className="h-4 w-4" />
-            </Button>
+          <form onSubmit={(e) => { e.preventDefault(); sendMessage(input); }} className="flex gap-2">
+            <Input value={input} onChange={(e) => setInput(e.target.value)} placeholder="Ask a scientific question..." className="flex-1 bg-card-elevated border-border" disabled={isLoading} />
+            <Button type="submit" disabled={isLoading || !input.trim()} className="glow-button"><Send className="h-4 w-4" /></Button>
           </form>
         </div>
       </Card>

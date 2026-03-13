@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X } from "lucide-react";
+import { Link } from "react-router-dom";
 import logoIcon from "@/assets/logo-icon.png";
 
 const navLinks = [
@@ -23,65 +24,31 @@ const Navbar = () => {
       <div className="max-w-7xl mx-auto flex items-center justify-between px-6 py-4">
         <a href="#" className="flex items-center gap-2.5">
           <img src={logoIcon} alt="ApeironAI" className="h-8 w-8" />
-          <span className="font-heading text-xl font-semibold text-foreground tracking-tight">
-            ApeironAI
-          </span>
+          <span className="font-heading text-xl font-semibold text-foreground tracking-tight">ApeironAI</span>
         </a>
 
-        {/* Desktop */}
         <div className="hidden md:flex items-center gap-8">
           {navLinks.map((l) => (
-            <a
-              key={l.label}
-              href={l.href}
-              className="text-sm text-muted-foreground hover:text-foreground transition-colors duration-300"
-            >
-              {l.label}
-            </a>
+            <a key={l.label} href={l.href} className="text-sm text-muted-foreground hover:text-foreground transition-colors duration-300">{l.label}</a>
           ))}
-          <a
-            href="#pricing"
-            className="text-sm font-medium bg-primary text-primary-foreground px-5 py-2 rounded-lg glow-button transition-all duration-300"
-          >
-            Get Started
-          </a>
+          <Link to="/login" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Log In</Link>
+          <Link to="/signup" className="text-sm font-medium bg-primary text-primary-foreground px-5 py-2 rounded-lg glow-button transition-all duration-300">Get Started</Link>
         </div>
 
-        {/* Mobile toggle */}
-        <button
-          className="md:hidden text-foreground"
-          onClick={() => setOpen(!open)}
-          aria-label="Toggle menu"
-        >
+        <button className="md:hidden text-foreground" onClick={() => setOpen(!open)} aria-label="Toggle menu">
           {open ? <X size={22} /> : <Menu size={22} />}
         </button>
       </div>
 
       <AnimatePresence>
         {open && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            className="md:hidden overflow-hidden glass border-t border-border/50"
-          >
+          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="md:hidden overflow-hidden glass border-t border-border/50">
             <div className="flex flex-col gap-4 px-6 py-6">
               {navLinks.map((l) => (
-                <a
-                  key={l.label}
-                  href={l.href}
-                  onClick={() => setOpen(false)}
-                  className="text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  {l.label}
-                </a>
+                <a key={l.label} href={l.href} onClick={() => setOpen(false)} className="text-muted-foreground hover:text-foreground transition-colors">{l.label}</a>
               ))}
-              <a
-                href="#pricing"
-                className="text-sm font-medium bg-primary text-primary-foreground px-5 py-2.5 rounded-lg text-center glow-button"
-              >
-                Get Started
-              </a>
+              <Link to="/login" onClick={() => setOpen(false)} className="text-muted-foreground hover:text-foreground transition-colors">Log In</Link>
+              <Link to="/signup" onClick={() => setOpen(false)} className="text-sm font-medium bg-primary text-primary-foreground px-5 py-2.5 rounded-lg text-center glow-button">Get Started</Link>
             </div>
           </motion.div>
         )}
