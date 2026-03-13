@@ -14,7 +14,198 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      experiments: {
+        Row: {
+          created_at: string
+          hypothesis: string | null
+          id: string
+          method: string | null
+          results: string | null
+          steps: string[] | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          hypothesis?: string | null
+          id?: string
+          method?: string | null
+          results?: string | null
+          steps?: string[] | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          hypothesis?: string | null
+          id?: string
+          method?: string | null
+          results?: string | null
+          steps?: string[] | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      hypotheses: {
+        Row: {
+          confidence_score: number | null
+          created_at: string
+          description: string | null
+          id: string
+          title: string
+          topic: string
+          user_id: string
+        }
+        Insert: {
+          confidence_score?: number | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          title: string
+          topic?: string
+          user_id: string
+        }
+        Update: {
+          confidence_score?: number | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          title?: string
+          topic?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      papers: {
+        Row: {
+          authors: string | null
+          created_at: string
+          id: string
+          link: string | null
+          summary: string | null
+          tags: string[] | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          authors?: string | null
+          created_at?: string
+          id?: string
+          link?: string | null
+          summary?: string | null
+          tags?: string[] | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          authors?: string | null
+          created_at?: string
+          id?: string
+          link?: string | null
+          summary?: string | null
+          tags?: string[] | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          email: string | null
+          full_name: string | null
+          id: string
+          organization: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id: string
+          organization?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          organization?: string | null
+        }
+        Relationships: []
+      }
+      projects: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          title: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          title: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      research_queries: {
+        Row: {
+          created_at: string
+          id: string
+          query: string
+          response: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          query: string
+          response?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          query?: string
+          response?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      waitlist: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          name: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          name?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
