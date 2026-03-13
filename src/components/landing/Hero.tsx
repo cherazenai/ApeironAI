@@ -1,27 +1,13 @@
 import { motion } from "framer-motion";
 import { ArrowRight, Sparkles } from "lucide-react";
-import logoFull from "@/assets/logo-full.png";
 
 const Hero = () => {
   return (
     <section className="relative min-h-screen flex items-center justify-center section-padding pt-32 overflow-hidden">
-      {/* Ambient glow */}
       <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-primary/5 blur-[120px] pointer-events-none" />
       <div className="absolute bottom-0 left-1/4 w-[400px] h-[400px] rounded-full bg-accent-soft/5 blur-[100px] pointer-events-none" />
 
       <div className="relative z-10 max-w-4xl mx-auto text-center">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-        >
-          <img
-            src={logoFull}
-            alt="ApeironAI"
-            className="h-16 md:h-20 mx-auto mb-8 animate-float"
-          />
-        </motion.div>
-
         <motion.p
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -66,7 +52,7 @@ const Hero = () => {
             Start Research
           </a>
           <a
-            href="#pricing"
+            href="#waitlist"
             className="inline-flex items-center justify-center gap-2 glass-hover px-8 py-3.5 rounded-lg text-foreground font-medium text-sm"
           >
             Join Waitlist

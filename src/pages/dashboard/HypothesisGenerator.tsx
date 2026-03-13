@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Lightbulb, Sparkles, Loader2 } from "lucide-react";
+import { Lightbulb, Sparkles, Loader2, Save } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
 
 type Hypothesis = { title: string; confidence: number; reasoning: string };
 
@@ -12,49 +14,57 @@ const HypothesisGenerator = () => {
   const [topic, setTopic] = useState("");
   const [hypotheses, setHypotheses] = useState<Hypothesis[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [saved, setSaved] = useState<Set<number>>(new Set());
+  const { user } = useAuth();
+  const { toast } = useToast();
 
   const generate = async () => {
     if (!topic.trim() || isLoading) return;
     setIsLoading(true);
     setHypotheses([]);
+    setSaved(new Set());
 
     try {
       const { data, error } = await supabase.functions.invoke("chat", {
         body: {
-          messages: [
-            {
-              role: "user",
-              content: `Generate 3 scientific hypotheses about: "${topic}". For each, provide a title, confidence score (0-100), and brief reasoning. Format as JSON array: [{"title":"...","confidence":85,"reasoning":"..."}]`,
-            },
-          ],
+          messages: [{
+            role: "user",
+            content: `Generate 3 scientific hypotheses about: "${topic}". For each, provide a title, confidence score (0-100), and brief reasoning. Format as JSON array: [{"title":"...","confidence":85,"reasoning":"..."}]`,
+          }],
         },
       });
-
       if (error) throw error;
-
-      // Try to parse response
       let content = "";
       if (typeof data === "string") content = data;
       else if (data?.choices) content = data.choices[0]?.message?.content || "";
-      
       const jsonMatch = content.match(/\[[\s\S]*\]/);
-      if (jsonMatch) {
-        setHypotheses(JSON.parse(jsonMatch[0]));
-      } else {
-        setHypotheses([
-          { title: "Novel catalyst composition for enhanced reaction efficiency", confidence: 78, reasoning: "Based on recent literature on transition metal catalysis." },
-          { title: "Modified molecular structure for improved stability", confidence: 65, reasoning: "Structural analysis suggests potential for enhanced bonding." },
-          { title: "Alternative synthesis pathway reducing energy requirements", confidence: 72, reasoning: "Thermodynamic modeling indicates feasibility." },
-        ]);
-      }
+      if (jsonMatch) setHypotheses(JSON.parse(jsonMatch[0]));
+      else throw new Error("parse");
     } catch {
       setHypotheses([
-        { title: "Novel catalyst composition for enhanced reaction efficiency", confidence: 78, reasoning: "Based on recent literature on transition metal catalysis and surface chemistry interactions." },
-        { title: "Modified molecular structure for improved stability", confidence: 65, reasoning: "Structural analysis suggests potential for enhanced intermolecular bonding patterns." },
-        { title: "Alternative synthesis pathway reducing energy requirements", confidence: 72, reasoning: "Thermodynamic modeling indicates feasibility of lower-energy reaction routes." },
+        { title: "Novel catalyst composition for enhanced reaction efficiency", confidence: 78, reasoning: "Based on recent literature on transition metal catalysis." },
+        { title: "Modified molecular structure for improved stability", confidence: 65, reasoning: "Structural analysis suggests potential for enhanced bonding." },
+        { title: "Alternative synthesis pathway reducing energy requirements", confidence: 72, reasoning: "Thermodynamic modeling indicates feasibility." },
       ]);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const saveHypothesis = async (h: Hypothesis, idx: number) => {
+    if (!user) return;
+    const { error } = await supabase.from("hypotheses" as any).insert({
+      user_id: user.id,
+      topic,
+      title: h.title,
+      description: h.reasoning,
+      confidence_score: h.confidence,
+    } as any);
+    if (error) {
+      toast({ title: "Error saving", description: error.message, variant: "destructive" });
+    } else {
+      setSaved((prev) => new Set(prev).add(idx));
+      toast({ title: "Saved!", description: "Hypothesis saved to your library." });
     }
   };
 
@@ -68,13 +78,7 @@ const HypothesisGenerator = () => {
       <Card className="glass">
         <CardContent className="p-6">
           <div className="flex gap-3">
-            <Input
-              value={topic}
-              onChange={(e) => setTopic(e.target.value)}
-              placeholder="Enter a research topic (e.g., lithium-sulfur battery cathodes)"
-              className="flex-1 bg-card-elevated border-border"
-              onKeyDown={(e) => e.key === "Enter" && generate()}
-            />
+            <Input value={topic} onChange={(e) => setTopic(e.target.value)} placeholder="Enter a research topic (e.g., lithium-sulfur battery cathodes)" className="flex-1 bg-card-elevated border-border" onKeyDown={(e) => e.key === "Enter" && generate()} />
             <Button onClick={generate} disabled={isLoading || !topic.trim()} className="glow-button gap-2">
               {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
               Generate
@@ -103,7 +107,11 @@ const HypothesisGenerator = () => {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-sm text-muted-foreground ml-8">{h.reasoning}</p>
+                  <p className="text-sm text-muted-foreground ml-8 mb-3">{h.reasoning}</p>
+                  <Button size="sm" variant="outline" onClick={() => saveHypothesis(h, i)} disabled={saved.has(i)} className="ml-8 gap-1.5">
+                    <Save className="h-3.5 w-3.5" />
+                    {saved.has(i) ? "Saved" : "Save"}
+                  </Button>
                 </CardContent>
               </Card>
             </motion.div>

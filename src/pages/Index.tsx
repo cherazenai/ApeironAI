@@ -5,6 +5,7 @@ import Demo from "@/components/landing/Demo";
 import UseCases from "@/components/landing/UseCases";
 import Architecture from "@/components/landing/Architecture";
 import Pricing from "@/components/landing/Pricing";
+import Waitlist from "@/components/landing/Waitlist";
 import Footer from "@/components/landing/Footer";
 
 const Index = () => (
@@ -16,6 +17,7 @@ const Index = () => (
     <UseCases />
     <Architecture />
     <Pricing />
+    <Waitlist />
     <Footer />
   </div>
 );

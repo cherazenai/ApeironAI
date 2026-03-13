@@ -1,21 +1,28 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { FlaskConical, Play, Loader2 } from "lucide-react";
+import { FlaskConical, Play, Loader2, Save } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import ReactMarkdown from "react-markdown";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
 
 const Simulations = () => {
   const [material, setMaterial] = useState("");
   const [reaction, setReaction] = useState("");
   const [isRunning, setIsRunning] = useState(false);
   const [result, setResult] = useState("");
+  const [resultSaved, setResultSaved] = useState(false);
+  const { user } = useAuth();
+  const { toast } = useToast();
 
   const runSimulation = async () => {
     if (!material || !reaction) return;
     setIsRunning(true);
     setResult("");
+    setResultSaved(false);
 
     try {
       const { data, error } = await supabase.functions.invoke("chat", {
@@ -30,9 +37,26 @@ const Simulations = () => {
       const content = typeof data === "string" ? data : data?.choices?.[0]?.message?.content || "Simulation complete.";
       setResult(content);
     } catch {
-      setResult("**Simulation Results (Demo)**\n\n- **Predicted Yield:** 73.2%\n- **Optimal Temperature:** 450-520°C\n- **Byproducts:** CO₂, H₂O\n- **Feasibility:** High\n- **Energy Efficiency:** 82%\n\n> The simulation suggests favorable thermodynamic conditions for this reaction pathway.");
+      setResult("**Simulation Results (Demo)**\n\n- **Predicted Yield:** 73.2%\n- **Optimal Temperature:** 450-520°C\n- **Byproducts:** CO₂, H₂O\n- **Feasibility:** High\n- **Energy Efficiency:** 82%");
     } finally {
       setIsRunning(false);
+    }
+  };
+
+  const saveResult = async () => {
+    if (!user || !result) return;
+    const { error } = await supabase.from("experiments" as any).insert({
+      user_id: user.id,
+      title: `${material} - ${reaction} simulation`,
+      hypothesis: `Simulating ${reaction} with ${material}`,
+      method: "AI Simulation",
+      results: result,
+    } as any);
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } else {
+      setResultSaved(true);
+      toast({ title: "Saved!", description: "Simulation saved to experiments." });
     }
   };
 
@@ -85,13 +109,18 @@ const Simulations = () => {
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
           <Card className="glass glow-border">
             <CardHeader>
-              <CardTitle className="text-lg font-heading flex items-center gap-2">
-                <FlaskConical className="h-5 w-5 text-primary" /> Results
-              </CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-lg font-heading flex items-center gap-2">
+                  <FlaskConical className="h-5 w-5 text-primary" /> Results
+                </CardTitle>
+                <Button size="sm" variant="outline" onClick={saveResult} disabled={resultSaved} className="gap-1.5">
+                  <Save className="h-3.5 w-3.5" /> {resultSaved ? "Saved" : "Save"}
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="prose prose-invert prose-sm max-w-none whitespace-pre-wrap text-sm text-foreground">
-                {result}
+              <div className="prose prose-invert prose-sm max-w-none text-sm text-foreground">
+                <ReactMarkdown>{result}</ReactMarkdown>
               </div>
             </CardContent>
           </Card>

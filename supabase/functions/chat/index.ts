@@ -9,7 +9,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { messages } = await req.json();
+    const { messages, stream: shouldStream } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
@@ -35,7 +35,7 @@ Always provide well-structured, scientifically rigorous responses. Use markdown 
           },
           ...messages,
         ],
-        stream: false,
+        stream: !!shouldStream,
       }),
     });
 
@@ -57,6 +57,12 @@ Always provide well-structured, scientifically rigorous responses. Use markdown 
       return new Response(JSON.stringify({ error: "AI service error" }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (shouldStream) {
+      return new Response(response.body, {
+        headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
       });
     }
 
