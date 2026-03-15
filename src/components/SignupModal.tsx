@@ -11,11 +11,10 @@ const SignupModal = () => {
   const { toast } = useToast();
 
   const handleGoogle = async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: { redirectTo: `${window.location.origin}/dashboard` },
+    const result = await lovable.auth.signInWithOAuth("google", {
+      redirect_uri: window.location.origin,
     });
-    if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
+    if (result?.error) toast({ title: "Error", description: result.error.message, variant: "destructive" });
   };
 
   return (
