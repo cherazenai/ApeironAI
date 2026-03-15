@@ -35,10 +35,12 @@ const Footer = () => (
         </div>
 
         <div>
-          <h4 className="text-xs font-body uppercase tracking-[0.2em] text-muted-foreground mb-3">Company</h4>
+          <h4 className="text-xs font-body uppercase tracking-[0.2em] text-muted-foreground mb-3">Connect</h4>
           <div className="space-y-2">
+            <a href="https://x.com/Apeironailabs" target="_blank" rel="noopener noreferrer" className="block text-sm text-muted-foreground/80 hover:text-foreground transition-colors">X (Twitter)</a>
+            <a href="https://www.reddit.com/u/ApeironAI/" target="_blank" rel="noopener noreferrer" className="block text-sm text-muted-foreground/80 hover:text-foreground transition-colors">Reddit</a>
+            <a href="https://www.instagram.com/apeironailabs" target="_blank" rel="noopener noreferrer" className="block text-sm text-muted-foreground/80 hover:text-foreground transition-colors">Instagram</a>
             <a href="https://www.cherazen.com" target="_blank" rel="noopener noreferrer" className="block text-sm text-muted-foreground/80 hover:text-foreground transition-colors">Cherazen Blog</a>
-            <a href="https://instagram.com/aperionhq" target="_blank" rel="noopener noreferrer" className="block text-sm text-muted-foreground/80 hover:text-foreground transition-colors">Instagram</a>
             <a href="mailto:cherazen.ai@gmail.com" className="block text-sm text-muted-foreground/80 hover:text-foreground transition-colors">Contact</a>
           </div>
         </div>
