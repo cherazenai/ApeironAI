@@ -1,5 +1,5 @@
 import {
-  LayoutDashboard, MessageSquare, Lightbulb, BookOpen,
+  LayoutDashboard, MessageSquare, Lightbulb, BookOpen, FileSearch,
   FlaskConical, TestTubes, FolderKanban, User, Settings, LogOut
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
