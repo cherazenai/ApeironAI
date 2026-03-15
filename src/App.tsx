@@ -9,12 +9,14 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
+import AuthCallback from "./pages/AuthCallback";
 import NotFound from "./pages/NotFound";
 import DashboardLayout from "./components/dashboard/DashboardLayout";
 import DashboardHome from "./pages/dashboard/DashboardHome";
 import ResearchCopilot from "./pages/dashboard/ResearchCopilot";
 import HypothesisGenerator from "./pages/dashboard/HypothesisGenerator";
 import PaperLibrary from "./pages/dashboard/PaperLibrary";
+import PaperReader from "./pages/dashboard/PaperReader";
 import Simulations from "./pages/dashboard/Simulations";
 import Experiments from "./pages/dashboard/Experiments";
 import SavedProjects from "./pages/dashboard/SavedProjects";
@@ -41,6 +43,7 @@ const App = () => (
               <Route path="/" element={<Index />} />
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
+              <Route path="/auth/callback" element={<AuthCallback />} />
               <Route path="/terms" element={<TermsOfService />} />
               <Route path="/privacy" element={<PrivacyPolicy />} />
               <Route path="/responsible-ai" element={<ResponsibleAI />} />
@@ -52,6 +55,7 @@ const App = () => (
                 <Route path="copilot" element={<ResearchCopilot />} />
                 <Route path="hypotheses" element={<HypothesisGenerator />} />
                 <Route path="papers" element={<PaperLibrary />} />
+                <Route path="paper-reader" element={<PaperReader />} />
                 <Route path="simulations" element={<Simulations />} />
                 <Route path="experiments" element={<Experiments />} />
                 <Route path="projects" element={<SavedProjects />} />

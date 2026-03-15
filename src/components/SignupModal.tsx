@@ -12,7 +12,7 @@ const SignupModal = () => {
 
   const handleGoogle = async () => {
     const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin,
+      redirect_uri: "https://ai.cherazen.com/auth/callback",
     });
     if (result?.error) toast({ title: "Error", description: result.error.message, variant: "destructive" });
   };

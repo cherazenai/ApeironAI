@@ -2,3 +2,6 @@ project_id = "jrmcukrqmxuegtzrjslw"
 
 [functions.chat]
 verify_jwt = false
+
+[functions.analyze-paper]
+verify_jwt = false
