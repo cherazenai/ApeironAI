@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,50 +6,50 @@
 
 @layer base {
   :root {
-    --background: 0 0% 0%;
-    --foreground: 0 0% 100%;
+    --background: 216 60% 4%;
+    --foreground: 210 40% 98%;
 
-    --card: 0 0% 4%;
-    --card-foreground: 0 0% 100%;
-    --card-elevated: 0 0% 6.7%;
+    --card: 216 50% 6%;
+    --card-foreground: 210 40% 98%;
+    --card-elevated: 216 45% 9%;
 
-    --popover: 0 0% 4%;
-    --popover-foreground: 0 0% 100%;
+    --popover: 216 50% 6%;
+    --popover-foreground: 210 40% 98%;
 
-    --primary: 191 68% 50%;
-    --primary-foreground: 0 0% 0%;
-    --primary-glow: 191 68% 50%;
-    --primary-muted: 191 40% 35%;
+    --primary: 199 89% 48%;
+    --primary-foreground: 216 60% 4%;
+    --primary-glow: 187 92% 69%;
+    --primary-muted: 199 50% 35%;
 
-    --secondary: 0 0% 6.7%;
-    --secondary-foreground: 0 0% 100%;
+    --secondary: 216 45% 9%;
+    --secondary-foreground: 210 40% 98%;
 
-    --muted: 0 0% 6.7%;
-    --muted-foreground: 220 2% 50%;
+    --muted: 216 40% 12%;
+    --muted-foreground: 215 20% 55%;
 
-    --accent: 191 68% 50%;
-    --accent-foreground: 0 0% 0%;
-    --accent-soft: 191 50% 82%;
+    --accent: 187 92% 69%;
+    --accent-foreground: 216 60% 4%;
+    --accent-soft: 199 92% 91%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
 
-    --border: 0 0% 12%;
-    --input: 0 0% 12%;
-    --ring: 191 68% 50%;
+    --border: 216 30% 14%;
+    --input: 216 30% 14%;
+    --ring: 199 89% 48%;
 
     --radius: 0.75rem;
 
-    --sidebar-background: 0 0% 3%;
-    --sidebar-foreground: 0 0% 100%;
-    --sidebar-primary: 191 68% 50%;
-    --sidebar-primary-foreground: 0 0% 0%;
-    --sidebar-accent: 0 0% 8%;
-    --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 0 0% 12%;
-    --sidebar-ring: 191 68% 50%;
+    --sidebar-background: 216 55% 3%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 199 89% 48%;
+    --sidebar-primary-foreground: 216 60% 4%;
+    --sidebar-accent: 216 40% 10%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 216 30% 14%;
+    --sidebar-ring: 199 89% 48%;
 
-    --font-heading: 'Playfair Display', serif;
+    --font-heading: 'Space Grotesk', sans-serif;
     --font-body: 'Inter', sans-serif;
   }
 }
@@ -83,22 +83,30 @@
     @apply glass transition-all duration-500 hover:border-primary/30 hover:shadow-[0_0_30px_-5px_hsl(var(--primary)/0.15)];
   }
   .glow-text {
-    text-shadow: 0 0 20px hsl(var(--primary) / 0.4);
+    text-shadow: 0 0 30px hsl(var(--primary) / 0.5), 0 0 60px hsl(var(--primary) / 0.2);
   }
   .glow-border {
-    box-shadow: 0 0 20px -5px hsl(var(--primary) / 0.3), inset 0 0 20px -5px hsl(var(--primary) / 0.05);
+    box-shadow: 0 0 25px -5px hsl(var(--primary) / 0.3), inset 0 0 25px -5px hsl(var(--primary) / 0.05);
   }
   .glow-button {
     @apply relative overflow-hidden;
-    box-shadow: 0 0 25px -5px hsl(var(--primary) / 0.4);
+    box-shadow: 0 0 30px -5px hsl(var(--primary) / 0.5);
   }
   .glow-button:hover {
-    box-shadow: 0 0 35px -3px hsl(var(--primary) / 0.6);
+    box-shadow: 0 0 45px -3px hsl(var(--primary) / 0.7);
   }
   .gradient-text {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-[hsl(var(--accent-soft))] via-[hsl(var(--primary))] to-[hsl(var(--primary-muted))];
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-[hsl(var(--accent))] via-[hsl(var(--primary))] to-[hsl(var(--primary-glow))];
+  }
+  .gradient-text-alt {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-[hsl(var(--primary-glow))] via-[hsl(var(--primary))] to-[hsl(var(--accent))];
   }
   .section-padding {
-    @apply px-6 py-24 md:px-12 lg:px-24 xl:px-32;
+    @apply px-5 py-20 md:px-12 md:py-28 lg:px-24 xl:px-32;
+  }
+  .aurora-bg {
+    background: radial-gradient(ellipse 80% 50% at 50% -20%, hsl(var(--primary) / 0.15), transparent),
+                radial-gradient(ellipse 60% 40% at 80% 50%, hsl(var(--accent) / 0.08), transparent),
+                radial-gradient(ellipse 50% 30% at 20% 80%, hsl(var(--primary-glow) / 0.06), transparent);
   }
 }
