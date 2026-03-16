@@ -3,9 +3,12 @@ import Navbar from "@/components/landing/Navbar";
 import Hero from "@/components/landing/Hero";
 import Features from "@/components/landing/Features";
 import Demo from "@/components/landing/Demo";
-import UseCases from "@/components/landing/UseCases";
+import HowItWorks from "@/components/landing/HowItWorks";
+import ResearchFields from "@/components/landing/ResearchFields";
+import ImpactStats from "@/components/landing/ImpactStats";
 import Architecture from "@/components/landing/Architecture";
 import Pricing from "@/components/landing/Pricing";
+import RealityLabCTA from "@/components/landing/RealityLabCTA";
 import BlogSection from "@/components/landing/BlogSection";
 import Waitlist from "@/components/landing/Waitlist";
 import Footer from "@/components/landing/Footer";
@@ -40,11 +43,14 @@ const Index = () => (
     </Helmet>
     <Navbar />
     <Hero />
+    <ImpactStats />
     <Features />
     <Demo />
-    <UseCases />
+    <HowItWorks />
+    <ResearchFields />
     <Architecture />
     <Pricing />
+    <RealityLabCTA />
     <BlogSection />
     <Waitlist />
     <Footer />
