@@ -51,6 +51,7 @@ const App = () => (
               <Route path="/research-ethics" element={<ResearchEthics />} />
               <Route path="/data-usage" element={<DataUsagePolicy />} />
               <Route path="/cookies" element={<CookiePolicy />} />
+              <Route path="/pricing" element={<Pricing />} />
               <Route path="/dashboard" element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
                 <Route index element={<DashboardHome />} />
                 <Route path="copilot" element={<ResearchCopilot />} />
