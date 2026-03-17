@@ -28,6 +28,7 @@ import ResponsibleAI from "./pages/legal/ResponsibleAI";
 import ResearchEthics from "./pages/legal/ResearchEthics";
 import DataUsagePolicy from "./pages/legal/DataUsagePolicy";
 import CookiePolicy from "./pages/legal/CookiePolicy";
+import Pricing from "./pages/Pricing";
 
 const queryClient = new QueryClient();
 
@@ -50,6 +51,7 @@ const App = () => (
               <Route path="/research-ethics" element={<ResearchEthics />} />
               <Route path="/data-usage" element={<DataUsagePolicy />} />
               <Route path="/cookies" element={<CookiePolicy />} />
+              <Route path="/pricing" element={<Pricing />} />
               <Route path="/dashboard" element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
                 <Route index element={<DashboardHome />} />
                 <Route path="copilot" element={<ResearchCopilot />} />
