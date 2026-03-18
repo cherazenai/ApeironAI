@@ -8,14 +8,30 @@ const AuthCallback = () => {
 
   useEffect(() => {
     const handleCallback = async () => {
-      const { error } = await supabase.auth.getSession();
-      if (error) {
-        console.error("Auth callback error:", error);
-        navigate("/login");
+      // Extract the code from the URL query params
+      const code = new URLSearchParams(window.location.search).get("code");
+
+      if (code) {
+        // Exchange the code for a real session (PKCE flow)
+        const { error } = await supabase.auth.exchangeCodeForSession(code);
+        if (error) {
+          console.error("Auth callback error:", error);
+          navigate("/login");
+        } else {
+          navigate("/dashboard");
+        }
       } else {
-        navigate("/dashboard");
+        // Fallback: check if session already exists (implicit flow)
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          navigate("/dashboard");
+        } else {
+          console.error("No code or session found");
+          navigate("/login");
+        }
       }
     };
+
     handleCallback();
   }, [navigate]);
 
