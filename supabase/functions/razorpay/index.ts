@@ -1,3 +1,4 @@
+
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
 
 const corsHeaders = {
@@ -27,24 +28,23 @@ Deno.serve(async (req) => {
     );
 
     const token = authHeader.replace("Bearer ", "");
-    const { data: claimsData, error: claimsError } = await supabase.auth.getClaims(token);
-    if (claimsError || !claimsData?.claims) {
+    const { data: { user }, error: userError } = await supabase.auth.getUser(token);
+    if (userError || !user) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const userId = claimsData.claims.sub;
+    const userId = user.id;
     const { action, plan, payment_id, order_id, signature } = await req.json();
 
     const RAZORPAY_KEY_ID = Deno.env.get("RAZORPAY_KEY_ID")!;
     const RAZORPAY_KEY_SECRET = Deno.env.get("RAZORPAY_KEY_SECRET")!;
 
     if (action === "create_order") {
-      // Map plan to amount (in paise)
       const planAmounts: Record<string, number> = {
-        researcher: 2900 * 100, // ₹2900 or $29 equivalent
+        researcher: 2900 * 100,
         scientist: 7900 * 100,
       };
 
@@ -85,7 +85,6 @@ Deno.serve(async (req) => {
     }
 
     if (action === "verify_payment") {
-      // Verify signature server-side
       const encoder = new TextEncoder();
       const key = await crypto.subtle.importKey(
         "raw",
@@ -107,7 +106,6 @@ Deno.serve(async (req) => {
         });
       }
 
-      // Update user's plan
       const adminClient = createClient(
         Deno.env.get("SUPABASE_URL")!,
         Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
