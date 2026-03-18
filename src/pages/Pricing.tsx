@@ -119,12 +119,8 @@ const Pricing = () => {
       const loaded = await loadRazorpayScript();
       if (!loaded) throw new Error("Failed to load Razorpay");
 
-      const { data: session } = await supabase.auth.getSession();
-      const token = session?.session?.access_token;
-
       const { data, error } = await supabase.functions.invoke("razorpay", {
         body: { action: "create_order", plan: planKey },
-        headers: { Authorization: `Bearer ${token}` },
       });
 
       if (error || !data?.order_id) throw new Error(error?.message || "Order creation failed");
@@ -146,7 +142,6 @@ const Pricing = () => {
                 order_id: response.razorpay_order_id,
                 signature: response.razorpay_signature,
               },
-              headers: { Authorization: `Bearer ${token}` },
             });
 
             if (verifyError || !verifyData?.success) {
