@@ -9,10 +9,44 @@ import { Textarea } from "@/components/ui/textarea";
 const GROQ_API_KEY = import.meta.env.VITE_GROQ_API_KEY;
 const MODEL = "llama-3.3-70b-versatile";
 
+const SYSTEM_PROMPT = `You are ApeironAI — a Research Copilot designed to assist scientists and researchers.
+
+Your goal is NOT to give generic explanations, but to produce structured, insightful, and research-grade outputs.
+
+Always follow this format:
+
+1. Summary (concise, technical overview)
+
+2. Key Methods & Approaches
+- Focus only on the most relevant and impactful methods
+- Avoid generic explanations
+
+3. Novel Insight / Research Direction
+- Suggest a specific, non-obvious research direction
+- Combine ideas if possible
+
+4. Testable Hypothesis
+- Provide at least one clear, testable scientific hypothesis
+- Make it measurable if possible
+
+5. Confidence Score
+- Give a confidence score (0–1) based on current scientific understanding
+
+6. Novelty Assessment
+- Low / Medium / High + short explanation
+
+7. Suggested Next Experiments
+- Practical steps a researcher could take
+
+Rules:
+- Avoid generic textbook explanations
+- Be specific and technical
+- Think like an expert collaborator, not a chatbot`;
+
 type Message = { role: "user" | "assistant"; content: string };
 type Tab = "chat" | "hypothesis" | "paper";
 
-async function askGroq(messages: Message[], systemPrompt: string): Promise<string> {
+async function askGroq(messages: Message[], extraSystem = ""): Promise<string> {
   const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
     method: "POST",
     headers: {
@@ -21,9 +55,13 @@ async function askGroq(messages: Message[], systemPrompt: string): Promise<strin
     },
     body: JSON.stringify({
       model: MODEL,
-      messages: [{ role: "system", content: systemPrompt }, ...messages],
+      messages: [
+        { role: "system", content: SYSTEM_PROMPT + (extraSystem ? "\n\n" + extraSystem : "") },
+        ...messages
+      ],
       temperature: 0.7,
       max_tokens: 1024,
+      top_p: 1,
     }),
   });
   const data = await res.json();
@@ -48,9 +86,7 @@ function ChatTab() {
     setMessages(newMessages);
     setInput("");
     setLoading(true);
-    const reply = await askGroq(newMessages,
-      "You are ApeironAI Research Copilot, an expert AI assistant for scientific research. You help researchers with literature analysis, methodology, data interpretation, and scientific reasoning. Be precise, cite reasoning clearly, and suggest next steps when relevant."
-    );
+    const reply = await askGroq(newMessages);
     setMessages([...newMessages, { role: "assistant", content: reply }]);
     setLoading(false);
   };
@@ -125,8 +161,8 @@ function HypothesisTab() {
     setLoading(true);
     setResult("");
     const reply = await askGroq(
-      [{ role: "user", content: `Generate 5 novel, testable scientific hypotheses for this research topic: "${topic}". For each hypothesis: 1) State the hypothesis clearly, 2) Explain the reasoning, 3) Suggest how to test it, 4) Rate novelty (1-10).` }],
-      "You are an expert scientific hypothesis generator. Generate precise, novel, and testable hypotheses grounded in current scientific knowledge. Format each hypothesis clearly and numbered."
+      [{ role: "user", content: `Generate 3 novel, testable scientific hypotheses for this research topic: "${topic}"` }],
+      "Focus specifically on hypothesis generation. For each hypothesis provide: statement, reasoning, testing method, confidence score, novelty rating, and next experiments."
     );
     setResult(reply);
     setLoading(false);
@@ -179,8 +215,8 @@ function PaperTab() {
     setLoading(true);
     setResult("");
     const reply = await askGroq(
-      [{ role: "user", content: `Analyze this scientific paper/text and provide: 1) Key findings summary, 2) Methodology used, 3) Strengths and limitations, 4) Implications for the field, 5) Suggested follow-up research directions.\n\nPaper text:\n${text}` }],
-      "You are an expert scientific paper analyzer. Extract key insights, evaluate methodology, identify limitations, and suggest research directions. Be thorough but concise."
+      [{ role: "user", content: `Analyze this scientific paper/text:\n\n${text}` }],
+      "Focus specifically on paper analysis. Extract key findings, evaluate methodology, identify limitations, suggest research directions, and provide confidence and novelty scores."
     );
     setResult(reply);
     setLoading(false);
@@ -196,7 +232,7 @@ function PaperTab() {
         disabled={loading}
       />
       <Button onClick={analyze} disabled={loading || !text.trim()} className="w-full glow-button">
-        {loading ? <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Analyzing...</> : <><FileText className="h-4 w-4 mr-2" /> Analyze Paper</>}
+        {loading ? <><Loader2 className="h-4 w-4 animate-spin mr-2" />Analyzing...</> : <><FileText className="h-4 w-4 mr-2" />Analyze Paper</>}
       </Button>
       {result && (
         <Card className="glass p-5 text-sm text-foreground leading-relaxed whitespace-pre-wrap max-h-[350px] overflow-y-auto">
@@ -225,7 +261,6 @@ const ResearchCopilot = () => {
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-8">
-      {/* Header */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-8">
         <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-primary/20 to-accent/10 border border-primary/20 flex items-center justify-center glow-border">
           <Bot className="h-8 w-8 text-primary" />
@@ -234,7 +269,6 @@ const ResearchCopilot = () => {
         <p className="text-sm text-muted-foreground">Powered by Llama 3.3 70B via Groq</p>
       </motion.div>
 
-      {/* Tabs */}
       <div className="flex gap-2 mb-6 bg-secondary rounded-xl p-1">
         {tabs.map((t) => (
           <button
@@ -252,7 +286,6 @@ const ResearchCopilot = () => {
         ))}
       </div>
 
-      {/* Tab Content */}
       <Card className="glass p-5">
         {tab === "chat" && <ChatTab />}
         {tab === "hypothesis" && <HypothesisTab />}
