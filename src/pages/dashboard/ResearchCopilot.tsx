@@ -1,131 +1,263 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Bot, Sparkles, Brain, FlaskConical, BookOpen, Loader2, CheckCircle2, Mail, User } from "lucide-react";
+import { Bot, Sparkles, Brain, FlaskConical, BookOpen, Loader2, Send, User, Lightbulb, FileText } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
+import { Textarea } from "@/components/ui/textarea";
 
-const features = [
-  { icon: BookOpen, title: "Read Scientific Literature", desc: "Analyze and extract insights from research papers" },
-  { icon: Brain, title: "Generate Hypotheses", desc: "AI-driven scientific hypothesis generation" },
-  { icon: FlaskConical, title: "Design Experiments", desc: "Step-by-step experimental design assistance" },
-  { icon: Sparkles, title: "Discover Insights", desc: "Cross-paper knowledge synthesis and discovery" },
-];
+const GROQ_API_KEY = import.meta.env.VITE_GROQ_API_KEY;
+const MODEL = "llama-3.3-70b-versatile";
 
-const ResearchCopilot = () => {
-  const [email, setEmail] = useState("");
-  const [name, setName] = useState("");
+type Message = { role: "user" | "assistant"; content: string };
+type Tab = "chat" | "hypothesis" | "paper";
+
+async function askGroq(messages: Message[], systemPrompt: string): Promise<string> {
+  const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${GROQ_API_KEY}`,
+    },
+    body: JSON.stringify({
+      model: MODEL,
+      messages: [{ role: "system", content: systemPrompt }, ...messages],
+      temperature: 0.7,
+      max_tokens: 1024,
+    }),
+  });
+  const data = await res.json();
+  return data.choices?.[0]?.message?.content || "No response received.";
+}
+
+// ── CHAT TAB ──────────────────────────────────────────────
+function ChatTab() {
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const [joined, setJoined] = useState(false);
-  const { toast } = useToast();
+  const bottomRef = useRef<HTMLDivElement>(null);
 
-  const handleJoin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email.trim()) return;
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  const send = async () => {
+    if (!input.trim() || loading) return;
+    const userMsg: Message = { role: "user", content: input.trim() };
+    const newMessages = [...messages, userMsg];
+    setMessages(newMessages);
+    setInput("");
     setLoading(true);
-    const { error } = await supabase.from("waitlist").insert({ email: email.trim(), name: name.trim() || null });
+    const reply = await askGroq(newMessages,
+      "You are ApeironAI Research Copilot, an expert AI assistant for scientific research. You help researchers with literature analysis, methodology, data interpretation, and scientific reasoning. Be precise, cite reasoning clearly, and suggest next steps when relevant."
+    );
+    setMessages([...newMessages, { role: "assistant", content: reply }]);
     setLoading(false);
-    if (error) {
-      if (error.code === "23505") {
-        toast({ title: "Already on the waitlist!", description: "This email is already registered." });
-        setJoined(true);
-      } else {
-        toast({ title: "Error", description: error.message, variant: "destructive" });
-      }
-    } else {
-      setJoined(true);
-      toast({ title: "You're on the list! 🎉", description: "We'll notify you when Research Copilot launches." });
-    }
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[calc(100vh-5rem)] max-w-3xl mx-auto px-4">
-      {/* Ambient glow */}
-      <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-primary/5 rounded-full blur-[120px]" />
-        <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-accent/5 rounded-full blur-[100px]" />
+    <div className="flex flex-col h-[500px]">
+      <div className="flex-1 overflow-y-auto space-y-4 mb-4 pr-1">
+        {messages.length === 0 && (
+          <div className="text-center text-muted-foreground text-sm mt-16">
+            <Bot className="h-10 w-10 mx-auto mb-3 text-primary/50" />
+            Ask anything about your research, papers, or scientific concepts.
+          </div>
+        )}
+        {messages.map((m, i) => (
+          <div key={i} className={`flex gap-3 ${m.role === "user" ? "justify-end" : "justify-start"}`}>
+            {m.role === "assistant" && (
+              <div className="w-7 h-7 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0 mt-1">
+                <Bot className="h-3.5 w-3.5 text-primary" />
+              </div>
+            )}
+            <div className={`max-w-[80%] px-4 py-2.5 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap ${
+              m.role === "user"
+                ? "bg-primary text-primary-foreground rounded-br-sm"
+                : "bg-card border border-border text-foreground rounded-bl-sm"
+            }`}>
+              {m.content}
+            </div>
+            {m.role === "user" && (
+              <div className="w-7 h-7 rounded-full bg-secondary border border-border flex items-center justify-center shrink-0 mt-1">
+                <User className="h-3.5 w-3.5 text-muted-foreground" />
+              </div>
+            )}
+          </div>
+        ))}
+        {loading && (
+          <div className="flex gap-3 justify-start">
+            <div className="w-7 h-7 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
+              <Bot className="h-3.5 w-3.5 text-primary" />
+            </div>
+            <div className="bg-card border border-border px-4 py-2.5 rounded-2xl rounded-bl-sm">
+              <Loader2 className="h-4 w-4 animate-spin text-primary" />
+            </div>
+          </div>
+        )}
+        <div ref={bottomRef} />
+      </div>
+      <div className="flex gap-2">
+        <Input
+          placeholder="Ask about your research..."
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && send()}
+          className="bg-secondary border-border"
+          disabled={loading}
+        />
+        <Button onClick={send} disabled={loading || !input.trim()} className="glow-button shrink-0">
+          <Send className="h-4 w-4" />
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+// ── HYPOTHESIS TAB ────────────────────────────────────────
+function HypothesisTab() {
+  const [topic, setTopic] = useState("");
+  const [result, setResult] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const generate = async () => {
+    if (!topic.trim() || loading) return;
+    setLoading(true);
+    setResult("");
+    const reply = await askGroq(
+      [{ role: "user", content: `Generate 5 novel, testable scientific hypotheses for this research topic: "${topic}". For each hypothesis: 1) State the hypothesis clearly, 2) Explain the reasoning, 3) Suggest how to test it, 4) Rate novelty (1-10).` }],
+      "You are an expert scientific hypothesis generator. Generate precise, novel, and testable hypotheses grounded in current scientific knowledge. Format each hypothesis clearly and numbered."
+    );
+    setResult(reply);
+    setLoading(false);
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex gap-2">
+        <Input
+          placeholder="Enter a research topic (e.g. CRISPR gene editing in cancer therapy)"
+          value={topic}
+          onChange={(e) => setTopic(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && generate()}
+          className="bg-secondary border-border"
+          disabled={loading}
+        />
+        <Button onClick={generate} disabled={loading || !topic.trim()} className="glow-button shrink-0">
+          {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Lightbulb className="h-4 w-4" />}
+        </Button>
+      </div>
+      {result && (
+        <Card className="glass p-5 text-sm text-foreground leading-relaxed whitespace-pre-wrap max-h-[400px] overflow-y-auto">
+          {result}
+        </Card>
+      )}
+      {!result && !loading && (
+        <div className="text-center text-muted-foreground text-sm py-16">
+          <Brain className="h-10 w-10 mx-auto mb-3 text-primary/50" />
+          Enter a research topic to generate novel hypotheses.
+        </div>
+      )}
+      {loading && (
+        <div className="text-center py-16">
+          <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-3" />
+          <p className="text-sm text-muted-foreground">Generating hypotheses...</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── PAPER READER TAB ──────────────────────────────────────
+function PaperTab() {
+  const [text, setText] = useState("");
+  const [result, setResult] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const analyze = async () => {
+    if (!text.trim() || loading) return;
+    setLoading(true);
+    setResult("");
+    const reply = await askGroq(
+      [{ role: "user", content: `Analyze this scientific paper/text and provide: 1) Key findings summary, 2) Methodology used, 3) Strengths and limitations, 4) Implications for the field, 5) Suggested follow-up research directions.\n\nPaper text:\n${text}` }],
+      "You are an expert scientific paper analyzer. Extract key insights, evaluate methodology, identify limitations, and suggest research directions. Be thorough but concise."
+    );
+    setResult(reply);
+    setLoading(false);
+  };
+
+  return (
+    <div className="space-y-4">
+      <Textarea
+        placeholder="Paste your paper abstract or full text here..."
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        className="bg-secondary border-border min-h-[150px] text-sm"
+        disabled={loading}
+      />
+      <Button onClick={analyze} disabled={loading || !text.trim()} className="w-full glow-button">
+        {loading ? <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Analyzing...</> : <><FileText className="h-4 w-4 mr-2" /> Analyze Paper</>}
+      </Button>
+      {result && (
+        <Card className="glass p-5 text-sm text-foreground leading-relaxed whitespace-pre-wrap max-h-[350px] overflow-y-auto">
+          {result}
+        </Card>
+      )}
+      {!result && !loading && (
+        <div className="text-center text-muted-foreground text-sm py-8">
+          <BookOpen className="h-10 w-10 mx-auto mb-3 text-primary/50" />
+          Paste any research paper text to get a full analysis.
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── MAIN COMPONENT ────────────────────────────────────────
+const ResearchCopilot = () => {
+  const [tab, setTab] = useState<Tab>("chat");
+
+  const tabs = [
+    { id: "chat" as Tab, label: "Research Chat", icon: Bot },
+    { id: "hypothesis" as Tab, label: "Hypothesis Generator", icon: Brain },
+    { id: "paper" as Tab, label: "Paper Analyzer", icon: BookOpen },
+  ];
+
+  return (
+    <div className="max-w-3xl mx-auto px-4 py-8">
+      {/* Header */}
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-8">
+        <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-primary/20 to-accent/10 border border-primary/20 flex items-center justify-center glow-border">
+          <Bot className="h-8 w-8 text-primary" />
+        </div>
+        <h1 className="text-2xl font-heading font-bold text-foreground mb-1">Research Copilot</h1>
+        <p className="text-sm text-muted-foreground">Powered by Llama 3.3 70B via Groq</p>
+      </motion.div>
+
+      {/* Tabs */}
+      <div className="flex gap-2 mb-6 bg-secondary rounded-xl p-1">
+        {tabs.map((t) => (
+          <button
+            key={t.id}
+            onClick={() => setTab(t.id)}
+            className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-all duration-200 ${
+              tab === t.id
+                ? "bg-background text-foreground shadow-sm border border-border"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <t.icon className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">{t.label}</span>
+          </button>
+        ))}
       </div>
 
-      <motion.div
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.7 }}
-        className="relative z-10 text-center w-full"
-      >
-        {/* Icon */}
-        <motion.div
-          initial={{ scale: 0.8 }}
-          animate={{ scale: 1 }}
-          transition={{ duration: 0.5 }}
-          className="w-20 h-20 mx-auto mb-8 rounded-2xl bg-gradient-to-br from-primary/20 to-accent/10 border border-primary/20 flex items-center justify-center glow-border"
-        >
-          <Bot className="h-10 w-10 text-primary" />
-        </motion.div>
-
-        <h1 className="text-3xl md:text-4xl font-heading font-bold text-foreground mb-2">Research Copilot</h1>
-        <p className="text-primary text-sm font-medium tracking-wide uppercase mb-6">Coming Soon</p>
-        <p className="text-muted-foreground max-w-xl mx-auto mb-10 leading-relaxed">
-          Research Copilot is currently under development. We are building an advanced AI system that can read scientific literature, generate hypotheses, and assist researchers in discovering new insights.
-        </p>
-
-        {/* Feature cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-12">
-          {features.map((f, i) => (
-            <motion.div
-              key={f.title}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 + i * 0.1 }}
-            >
-              <Card className="glass p-5 text-left hover:border-primary/30 hover:shadow-[0_0_30px_-5px_hsl(var(--primary)/0.15)] transition-all duration-500">
-                <div className="flex items-start gap-3">
-                  <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                    <f.icon className="h-4 w-4 text-primary" />
-                  </div>
-                  <div>
-                    <h3 className="font-heading text-sm font-semibold text-foreground mb-1">{f.title}</h3>
-                    <p className="text-xs text-muted-foreground">{f.desc}</p>
-                  </div>
-                </div>
-              </Card>
-            </motion.div>
-          ))}
-        </div>
-
-        {/* Waitlist form */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.7 }}
-        >
-          {joined ? (
-            <Card className="glass glow-border p-8 max-w-md mx-auto flex flex-col items-center gap-3">
-              <CheckCircle2 className="h-10 w-10 text-primary" />
-              <p className="font-heading text-lg text-foreground">You're on the list!</p>
-              <p className="text-sm text-muted-foreground">We'll notify you when Research Copilot launches.</p>
-            </Card>
-          ) : (
-            <Card className="glass p-6 max-w-md mx-auto">
-              <p className="text-sm text-foreground font-heading mb-4">Join the Waitlist</p>
-              <form onSubmit={handleJoin} className="space-y-3">
-                <div className="relative">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input placeholder="Full name" value={name} onChange={(e) => setName(e.target.value)} className="pl-10 bg-secondary border-border" />
-                </div>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input type="email" placeholder="your@email.com" value={email} onChange={(e) => setEmail(e.target.value)} className="pl-10 bg-secondary border-border" required />
-                </div>
-                <Button type="submit" disabled={loading} className="w-full glow-button h-11">
-                  {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Join the Waitlist"}
-                </Button>
-              </form>
-            </Card>
-          )}
-        </motion.div>
-      </motion.div>
+      {/* Tab Content */}
+      <Card className="glass p-5">
+        {tab === "chat" && <ChatTab />}
+        {tab === "hypothesis" && <HypothesisTab />}
+        {tab === "paper" && <PaperTab />}
+      </Card>
     </div>
   );
 };
