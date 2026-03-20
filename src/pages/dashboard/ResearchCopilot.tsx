@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Bot, Brain, BookOpen, Loader2, Send, User, Lightbulb, FileText } from "lucide-react";
@@ -271,9 +270,7 @@ const ResearchCopilot = () => {
   return (
     <div className="max-w-3xl mx-auto px-4 py-8">
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-8">
-        <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-primary/20 to-accent/10 border border-primary/20 flex items-center justify-center glow-border">
-          <img src={logoIcon} alt="ApeironAI" className="h-10 w-10" />
-        </div>
+        <img src={logoIcon} alt="ApeironAI" className="h-16 w-16 mx-auto mb-4" /> 
         <h1 className="text-2xl font-heading font-bold text-foreground mb-1">Research Copilot</h1>
         <p className="text-sm text-muted-foreground">Powered by Llama 3.3 70B via Groq</p>
       </motion.div>
