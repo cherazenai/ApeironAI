@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import logoIcon from "@/assets/logo-icon.png";
 
 const GROQ_API_KEY = import.meta.env.VITE_GROQ_API_KEY;
 
@@ -107,7 +108,7 @@ function ChatTab() {
           <div key={i} className={`flex gap-3 ${m.role === "user" ? "justify-end" : "justify-start"}`}>
             {m.role === "assistant" && (
               <div className="w-7 h-7 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0 mt-1">
-                <Bot className="h-3.5 w-3.5 text-primary" />
+                <img src={logoIcon} alt="ApeironAI" className="h-4 w-4" />
               </div>
             )}
             <div className={`max-w-[80%] px-4 py-2.5 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap ${
@@ -127,7 +128,7 @@ function ChatTab() {
         {loading && (
           <div className="flex gap-3 justify-start">
             <div className="w-7 h-7 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
-              <Bot className="h-3.5 w-3.5 text-primary" />
+              <img src={logoIcon} alt="ApeironAI" className="h-4 w-4" />
             </div>
             <div className="bg-card border border-border px-4 py-2.5 rounded-2xl rounded-bl-sm">
               <Loader2 className="h-4 w-4 animate-spin text-primary" />
@@ -271,7 +272,7 @@ const ResearchCopilot = () => {
     <div className="max-w-3xl mx-auto px-4 py-8">
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-8">
         <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-primary/20 to-accent/10 border border-primary/20 flex items-center justify-center glow-border">
-          <Bot className="h-8 w-8 text-primary" />
+          <img src={logoIcon} alt="ApeironAI" className="h-10 w-10" />
         </div>
         <h1 className="text-2xl font-heading font-bold text-foreground mb-1">Research Copilot</h1>
         <p className="text-sm text-muted-foreground">Powered by Llama 3.3 70B via Groq</p>
