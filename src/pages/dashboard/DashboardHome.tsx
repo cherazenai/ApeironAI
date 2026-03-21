@@ -14,6 +14,13 @@ const stats = [
   { label: "Simulation Runs", value: 156, change: "+5%", icon: FlaskConical },
 ];
 
+const tools = [
+  { label: "Research Copilot", icon: Brain, path: "/dashboard/copilot", desc: "Ask scientific questions" },
+  { label: "Hypothesis Generator", icon: Lightbulb, path: "/dashboard/hypotheses", desc: "Generate novel hypotheses" },
+  { label: "Paper Library", icon: BookOpen, path: "/dashboard/papers", desc: "Browse saved papers" },
+  { label: "Simulations", icon: FlaskConical, path: "/dashboard/simulations", desc: "Run experiments" },
+];
+
 const queryData = [
   { name: "Mon", queries: 42 }, { name: "Tue", queries: 58 },
   { name: "Wed", queries: 73 }, { name: "Thu", queries: 65 },
@@ -66,6 +73,7 @@ const DashboardHome = () => {
 
   return (
     <div className="space-y-8 max-w-7xl">
+
       {/* Welcome Panel */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -95,7 +103,12 @@ const DashboardHome = () => {
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {stats.map((stat, i) => (
-          <motion.div key={stat.label} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}>
+          <motion.div
+            key={stat.label}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.1 }}
+          >
             <Card className="glass group hover:border-primary/30 hover:shadow-[0_0_30px_-5px_hsl(var(--primary)/0.15)] transition-all duration-500 hover:-translate-y-0.5">
               <CardContent className="p-5">
                 <div className="flex items-center justify-between">
@@ -116,9 +129,41 @@ const DashboardHome = () => {
         ))}
       </div>
 
+      {/* Quick Tools Grid — NEW */}
+      <div>
+        <h2 className="text-base font-semibold text-foreground mb-3">Quick Tools</h2>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {tools.map((tool, i) => (
+            <motion.div
+              key={tool.label}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.08 }}
+            >
+              <Card
+                onClick={() => navigate(tool.path)}
+                className="glass hover:border-primary/30 hover:-translate-y-0.5 hover:shadow-[0_0_30px_-5px_hsl(var(--primary)/0.15)] transition-all duration-300 cursor-pointer group"
+              >
+                <CardContent className="p-4 flex flex-col gap-2">
+                  <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors duration-300">
+                    <tool.icon className="h-4 w-4 text-primary" />
+                  </div>
+                  <p className="text-sm font-semibold text-foreground">{tool.label}</p>
+                  <p className="text-xs text-muted-foreground">{tool.desc}</p>
+                </CardContent>
+              </Card>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+        >
           <Card className="glass hover:border-primary/20 transition-all duration-500">
             <CardHeader className="pb-2">
               <CardTitle className="text-lg font-heading tracking-wide">Research Queries</CardTitle>
@@ -135,15 +180,35 @@ const DashboardHome = () => {
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(0, 0%, 12%)" />
                   <XAxis dataKey="name" stroke="hsl(220, 2%, 40%)" fontSize={12} />
                   <YAxis stroke="hsl(220, 2%, 40%)" fontSize={12} />
-                  <Tooltip contentStyle={{ backgroundColor: "hsl(0, 0%, 4%)", border: "1px solid hsl(191, 68%, 50%, 0.2)", borderRadius: "12px", color: "#fff", boxShadow: "0 0 20px hsl(191 68% 50% / 0.1)" }} />
-                  <Area type="monotone" dataKey="queries" stroke="hsl(191, 68%, 50%)" fill="url(#queryGrad)" strokeWidth={2} dot={{ fill: "hsl(191, 68%, 50%)", strokeWidth: 0, r: 3 }} activeDot={{ r: 5, fill: "hsl(191, 68%, 50%)", stroke: "hsl(191, 68%, 50%)", strokeWidth: 4, strokeOpacity: 0.3 }} />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "hsl(0, 0%, 4%)",
+                      border: "1px solid hsl(191, 68%, 50%, 0.2)",
+                      borderRadius: "12px",
+                      color: "#fff",
+                      boxShadow: "0 0 20px hsl(191 68% 50% / 0.1)"
+                    }}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="queries"
+                    stroke="hsl(191, 68%, 50%)"
+                    fill="url(#queryGrad)"
+                    strokeWidth={2}
+                    dot={{ fill: "hsl(191, 68%, 50%)", strokeWidth: 0, r: 3 }}
+                    activeDot={{ r: 5, fill: "hsl(191, 68%, 50%)", stroke: "hsl(191, 68%, 50%)", strokeWidth: 4, strokeOpacity: 0.3 }}
+                  />
                 </AreaChart>
               </ResponsiveContainer>
             </CardContent>
           </Card>
         </motion.div>
 
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+        >
           <Card className="glass hover:border-primary/20 transition-all duration-500">
             <CardHeader className="pb-2">
               <CardTitle className="text-lg font-heading tracking-wide">Hypotheses Overview</CardTitle>
@@ -154,7 +219,15 @@ const DashboardHome = () => {
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(0, 0%, 12%)" />
                   <XAxis dataKey="name" stroke="hsl(220, 2%, 40%)" fontSize={12} />
                   <YAxis stroke="hsl(220, 2%, 40%)" fontSize={12} />
-                  <Tooltip contentStyle={{ backgroundColor: "hsl(0, 0%, 4%)", border: "1px solid hsl(191, 68%, 50%, 0.2)", borderRadius: "12px", color: "#fff", boxShadow: "0 0 20px hsl(191 68% 50% / 0.1)" }} />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "hsl(0, 0%, 4%)",
+                      border: "1px solid hsl(191, 68%, 50%, 0.2)",
+                      borderRadius: "12px",
+                      color: "#fff",
+                      boxShadow: "0 0 20px hsl(191 68% 50% / 0.1)"
+                    }}
+                  />
                   <Bar dataKey="generated" fill="hsl(191, 68%, 50%)" radius={[6, 6, 0, 0]} />
                   <Bar dataKey="validated" fill="hsl(191, 40%, 35%)" radius={[6, 6, 0, 0]} />
                 </BarChart>
@@ -165,7 +238,11 @@ const DashboardHome = () => {
       </div>
 
       {/* Recent Activity */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }}>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.6 }}
+      >
         <Card className="glass hover:border-primary/20 transition-all duration-500">
           <CardHeader className="pb-2">
             <CardTitle className="text-lg font-heading tracking-wide">Recent Activity</CardTitle>
@@ -191,6 +268,7 @@ const DashboardHome = () => {
           </CardContent>
         </Card>
       </motion.div>
+
     </div>
   );
 };
